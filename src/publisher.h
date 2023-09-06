@@ -6,6 +6,8 @@
 #include <mutex>
 #include <vector>
 #include <string>
+#include <atomic>
+#include <condition_variable>
 
 #include "publisher_statistics.h"
 
@@ -16,7 +18,7 @@ class Publisher
 //////////////////////////////////////
 public:
   // Constructor that gets a frequency in Hz
-  Publisher(const std::string& topic_name, double frequency, size_t payload_size);
+  Publisher(const std::string& topic_name, double frequency, std::size_t payload_size);
 
   // Destructor
   ~Publisher();

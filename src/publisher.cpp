@@ -8,9 +8,11 @@
   #define NOMINMAX
   #define WIN32_LEAN_AND_MEAN
   #include <Windows.h>
+#else
+  #include <unistd.h>
 #endif // WIN32
 
-Publisher::Publisher(const std::string& topic_name, double frequency, size_t payload_size)
+Publisher::Publisher(const std::string& topic_name, double frequency, std::size_t payload_size)
   : ecal_pub        (topic_name)
   , frequency_      (frequency)
   , is_interrupted_ (false)
@@ -121,7 +123,11 @@ bool Publisher::preciseWaitUntil(std::chrono::steady_clock::time_point time) con
     {
       while (std::chrono::steady_clock::now() < (time - max_time_to_busy_wait))
       {
+#ifdef WIN32
         Sleep(0);
+#else
+        usleep(1);
+#endif
         if (is_interrupted_)
           return false;
       }

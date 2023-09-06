@@ -33,3 +33,6 @@
 
 # Build dir
 /_build
+
+# IDE files
+CMakeLists.txt.user
