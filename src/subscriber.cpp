@@ -82,6 +82,9 @@ void Subscriber::statisticsLoop()
       {
         statistics_size_ = std::max(statistics_size_, statistics_.size());
         statistics_.swap(statistics);
+
+        // Initialize the new statistics vector with the last element of the old one. This is important for detecting drops and properly computing the delay of the actual first message.
+        statistics_.push_back(statistics.back());
       }
     }
 

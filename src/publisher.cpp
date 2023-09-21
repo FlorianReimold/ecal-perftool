@@ -90,6 +90,9 @@ void Publisher::statisticsLoop()
 
       if(statistics_.size() > 1)
         statistics_.swap(statistics);
+
+      // Initialize the new statistics vector with the last element of the old one. This is important for properly computing the loop time of the actual first message.
+      statistics_.push_back(statistics.back());
     }
 
     if (statistics.size() > 1)
@@ -101,7 +104,7 @@ void Publisher::statisticsLoop()
   
 bool Publisher::preciseWaitUntil(std::chrono::steady_clock::time_point time) const
 {
-  constexpr auto max_time_to_poll_wait = std::chrono::milliseconds(5);
+  constexpr auto max_time_to_poll_wait = std::chrono::milliseconds(20);
   constexpr auto max_time_to_busy_wait = std::chrono::microseconds(3);
 
   while(true)

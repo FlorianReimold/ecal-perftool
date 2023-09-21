@@ -6,6 +6,15 @@
 #include <iostream>
 #include <thread>
 
+
+#ifdef WIN32
+
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+#endif
+
+
 void printUsage(const std::string& arg0)
 {
   std::cout << "Usage:" << std::endl;
@@ -16,6 +25,11 @@ void printUsage(const std::string& arg0)
 
 int main(int argc, char** argv)
 {
+#ifdef WIN32
+  SetConsoleOutputCP(CP_UTF8);
+#endif // WIN32
+
+
   // convert argc, argv to vector of strings
   std::vector<std::string> args;
   args.reserve(static_cast<size_t>(argc));
