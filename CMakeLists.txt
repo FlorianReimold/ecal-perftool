@@ -1,7 +1,7 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.13)
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG ON)
 
-project(ecal_perftool)
+project(perftool)
 
 find_package(eCAL REQUIRED)
 
@@ -16,7 +16,7 @@ set(source_files
 )
 
 #add_executable(${PROJECT_NAME} ${source_files})
-ecal_add_sample(${PROJECT_NAME} ${source_files})
+ecal_add_app_console(${PROJECT_NAME} ${source_files})
 
 target_link_libraries(${PROJECT_NAME}
   eCAL::core

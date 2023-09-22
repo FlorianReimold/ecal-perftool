@@ -12,19 +12,22 @@
   #include <unistd.h>
 #endif // WIN32
 
-Publisher::Publisher(const std::string& topic_name, double frequency, std::size_t payload_size)
-  : ecal_pub        (topic_name)
-  , frequency_      (frequency)
-  , is_interrupted_ (false)
-  , payload_        (payload_size)
-  , next_deadline_  (std::chrono::steady_clock::now() + period_)
-  , period_         (std::chrono::nanoseconds(static_cast<long long>(1e9 / frequency)))
+Publisher::Publisher(const std::string& topic_name, double frequency, std::size_t payload_size, bool quiet, bool log_print_verbose_times)
+  : ecal_pub                (topic_name)
+  , frequency_              (frequency)
+  , is_interrupted_         (false)
+  , payload_                (payload_size)
+  , next_deadline_          (std::chrono::steady_clock::now() + period_)
+  , period_                 (std::chrono::nanoseconds(static_cast<long long>(1e9 / frequency)))
+  , log_print_verbose_times_(log_print_verbose_times)
 {
   statistics_.reserve(static_cast<size_t>((frequency + 1.0) * 1.2));
 
   // Start the thread
   publisher_thread_ = std::make_unique<std::thread>([this](){ this->loop(); });
-  statistics_thread_ = std::make_unique<std::thread>([this](){ this->statisticsLoop(); });
+
+  if (!quiet)
+    statistics_thread_ = std::make_unique<std::thread>([this](){ this->statisticsLoop(); });
 }
 
 // Destructor
@@ -39,7 +42,9 @@ Publisher::~Publisher()
 
   // Join the thread
   publisher_thread_->join();
-  statistics_thread_->join();
+
+  if (statistics_thread_)
+    statistics_thread_->join();
 }
 
 void Publisher::loop()
@@ -66,6 +71,7 @@ void Publisher::loop()
     message_info.publish_time       = timepoint_snd_start;
     message_info.send_call_duration = timepoint_snd_end - timepoint_snd_start;
 
+    if (statistics_thread_)
     {
       std::lock_guard<std::mutex>lock (mutex_);
       statistics_.push_back(message_info);
@@ -96,7 +102,7 @@ void Publisher::statisticsLoop()
     }
 
     if (statistics.size() > 1)
-      printStatistics(statistics);
+      printStatistics(statistics, log_print_verbose_times_);
     else
       std::cerr << "Not enough data" << std::endl;
   }

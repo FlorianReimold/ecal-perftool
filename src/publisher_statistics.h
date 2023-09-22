@@ -15,7 +15,7 @@ struct PublishedMessage
 
 using PublisherStatistics = std::vector<PublishedMessage>;
 
-inline void printStatistics(const PublisherStatistics& statistics)
+inline void printStatistics(const PublisherStatistics& statistics, bool print_verbose_times)
 {
   // Compute entire entire_duration from first to last message and the mean
   auto entire_duration         = statistics.back().publish_time - statistics.front().publish_time;
@@ -53,21 +53,51 @@ inline void printStatistics(const PublisherStatistics& statistics)
   auto loop_frequency          = 1.0 / std::chrono::duration_cast<std::chrono::duration<double>>(loop_time_mean).count();
 
   
-  // Print mean entire_duration and rmse in a single line in milliseconds
-  std::stringstream ss;
-  ss << std::right << std::fixed;
-  ss << "["                      << std::setprecision(3) << std::setw(10) << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now().time_since_epoch()).count() << "]";
-  ss << " | cnt:"                << std::setprecision(3) << std::setw(5) << statistics.size() - 1;
-  ss << " | loop_dt(ms) mean:"   << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(loop_time_mean).count();
-  ss << " ["                     << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(loop_time_min).count();
-  ss << ","                      << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(loop_time_max).count();
-  ss << "]";
-  ss << " | loop_freq(Hz):"     << std::setprecision(1) << std::setw(7) << loop_frequency;
-  ss << " | snd_dt(ms) mean:"   << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(send_call_duration_mean).count();
-  ss << " ["                    << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(send_call_duration_min).count();
-  ss << ","                     << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(send_call_duration_max).count();
-  ss << "]";
+  // Print statistics (mean and min/max)
+  {
+    std::stringstream ss;
+    ss << std::right << std::fixed;
+    ss << "["                      << std::setprecision(3) << std::setw(10) << std::chrono::duration_cast<std::chrono::duration<double>>(std::chrono::steady_clock::now().time_since_epoch()).count() << "]";
+    ss << " | cnt:"                << std::setprecision(3) << std::setw(5) << statistics.size() - 1;
+    ss << " | loop_dt(ms) mean:"   << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(loop_time_mean).count();
+    ss << " ["                     << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(loop_time_min).count();
+    ss << ","                      << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(loop_time_max).count();
+    ss << "]";
+    ss << " | loop_freq(Hz):"     << std::setprecision(1) << std::setw(7) << loop_frequency;
+    ss << " | snd_dt(ms) mean:"   << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(send_call_duration_mean).count();
+    ss << " ["                    << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(send_call_duration_min).count();
+    ss << ","                     << std::setprecision(3) << std::setw(8) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(send_call_duration_max).count();
+    ss << "]";
 
-  std::cerr << ss.str() << std::endl;
+    std::cerr << ss.str() << std::endl;
+  }
 
+  // Print all times verbose
+  if (print_verbose_times)
+  {
+    std::stringstream ss;
+    ss << std::right << std::fixed;
+
+    ss << "  loop_dt(ms): ";
+    for (size_t i = 1; i < statistics.size(); ++i)
+    {
+      if (i > 1)
+        ss << " ";
+
+      auto loop_time = statistics[i].publish_time - statistics[i - 1].publish_time;
+      ss << std::setprecision(1) << std::setw(5) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(loop_time).count();
+    }
+    ss << std::endl;
+
+    ss << "  snd_dt(ms) : ";
+    for (size_t i = 1; i < statistics.size(); ++i)
+    {
+      if (i > 1)
+        ss << " ";
+      auto send_call_duration = statistics[i].send_call_duration;
+      ss << std::setprecision(1) << std::setw(5) << std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(send_call_duration).count();
+    }
+
+    std::cerr << ss.str() << std::endl;
+  }
 }

@@ -21,6 +21,12 @@ void printUsage(const std::string& arg0)
   std::cout << "  " << arg0 << " pub <topic_name> <frequency_hz> <payload_size_bytes>" << std::endl;
   std::cout << "or:" << std::endl;
   std::cout << "  " << arg0 << " sub <topic_name> [callback_delay_ms]" << std::endl;
+  std::cout << std::endl;
+  std::cout << "Options:" << std::endl;
+  std::cout << "  -q, --quiet:     Do not print any output" << std::endl;
+  std::cout << "  -v, --verbose:   Print all measured times for all messages" << std::endl;
+  std::cout << "      --busy-wait: Busy wait when receiving messages (i.e. burn CPU)" << std::endl;
+
 }
 
 int main(int argc, char** argv)
@@ -29,6 +35,9 @@ int main(int argc, char** argv)
   SetConsoleOutputCP(CP_UTF8);
 #endif // WIN32
 
+  bool quiet_arg           = false;
+  bool verbose_print_times = false;
+  bool busy_wait_arg       = false;
 
   // convert argc, argv to vector of strings
   std::vector<std::string> args;
@@ -46,7 +55,66 @@ int main(int argc, char** argv)
     printUsage(args[0]);
     return 0;
   }
-  else if (args[1] == "pub")
+
+  // find "--quiet" argument and remove it from args
+  {
+    auto quiet_arg_it = std::find(args.begin(), args.end(), "--quiet");
+    if (quiet_arg_it != args.end())
+    {
+      quiet_arg = true;
+      args.erase(quiet_arg_it);
+    }
+  }
+
+  // find "-q" argument and remove it from args
+  {
+    auto q_arg_it = std::find(args.begin(), args.end(), "-q");
+    if (q_arg_it != args.end())
+    {
+      quiet_arg = true;
+      args.erase(q_arg_it);
+    }
+  }
+  
+  // find "--verbose" argument and remove it from args
+  {
+    auto verbose_arg_it = std::find(args.begin(), args.end(), "--verbose");
+    if (verbose_arg_it != args.end())
+    {
+      verbose_print_times = true;
+      args.erase(verbose_arg_it);
+    }
+  }
+
+  // find "-v" argument and remove it from args
+  {
+    auto v_arg_it = std::find(args.begin(), args.end(), "-v");
+    if (v_arg_it != args.end())
+    {
+      verbose_print_times = true;
+      args.erase(v_arg_it);
+    }
+  }
+
+  // Validate quite and verbose args
+  if (quiet_arg && verbose_print_times)
+  {
+    std::cerr << "Invalid arguments: Cannot use \"quiet\" and \"verbose\" simultaneously" << std::endl;
+    printUsage(argv[0]);
+    return 1;
+  }
+
+  // find "--busy-wait" argument and remove it from args
+  {
+    auto busy_wait_arg_it = std::find(args.begin(), args.end(), "--busy-wait");
+    if (busy_wait_arg_it != args.end())
+    {
+      busy_wait_arg = true;
+      args.erase(busy_wait_arg_it);
+    }
+  }
+
+  if (args[1] == "pub")
   {
     if (args.size() != 5)
     {
@@ -62,7 +130,7 @@ int main(int argc, char** argv)
     eCAL::Initialize(argc, argv, "ecal-perftool");
     eCAL::Util::EnableLoopback(true);
     
-    Publisher publisher(topic_name, frequency_hz, payload_size_bytes);
+    Publisher publisher(topic_name, frequency_hz, payload_size_bytes, quiet_arg, verbose_print_times);
     
     // Just don't exit
     while (eCAL::Ok())
@@ -90,7 +158,7 @@ int main(int argc, char** argv)
     eCAL::Initialize(argc, argv, "ecal-perftool");
     eCAL::Util::EnableLoopback(true);
     
-    Subscriber subscriber(topic_name, callback_delay, false);
+    Subscriber subscriber(topic_name, callback_delay, busy_wait_arg, quiet_arg, verbose_print_times);
 
     // Just don't exit
     while (eCAL::Ok())

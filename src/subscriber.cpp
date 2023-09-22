@@ -3,17 +3,19 @@
 #include <iostream>
 #include <thread>
 
-Subscriber::Subscriber(const std::string& topic_name, std::chrono::nanoseconds time_to_waste, bool busy_wait)
-  : ecal_sub(topic_name)
-  , time_to_waste_(time_to_waste)
-  , busy_wait_(busy_wait_)
-  , is_interrupted_(false)
-  , statistics_size_(100)
+Subscriber::Subscriber(const std::string& topic_name, std::chrono::nanoseconds time_to_waste, bool busy_wait, bool quiet, bool log_print_verbose_times)
+  : ecal_sub                (topic_name)
+  , time_to_waste_          (time_to_waste)
+  , busy_wait_              (busy_wait)
+  , is_interrupted_         (false)
+  , statistics_size_        (100)
+  , log_print_verbose_times_(log_print_verbose_times)
 {
   statistics_.reserve(statistics_size_);
   
   // create statistics thread
-  statistics_thread_ = std::make_unique<std::thread>([this](){ this->statisticsLoop(); });
+  if (!quiet)
+    statistics_thread_ = std::make_unique<std::thread>([this](){ this->statisticsLoop(); });
 
   ecal_sub.AddReceiveCallback([this](const char* topic_name_, const eCAL::SReceiveCallbackData* data_) { callback(topic_name_, data_); });
 }
@@ -29,7 +31,8 @@ Subscriber::~Subscriber()
   }
 
   // Join the thread
-  statistics_thread_->join();
+  if (statistics_thread_)
+    statistics_thread_->join();
 }
 
 void Subscriber::callback(const char* topic_name_, const eCAL::SReceiveCallbackData* data_)
@@ -57,6 +60,7 @@ void Subscriber::callback(const char* topic_name_, const eCAL::SReceiveCallbackD
     }
   }
 
+  if (statistics_thread_)
   {
     std::unique_lock<std::mutex>lock(mutex_);
     statistics_.push_back(message_info);
@@ -89,7 +93,7 @@ void Subscriber::statisticsLoop()
     }
 
     if (statistics.size() > 1)
-      printStatistics(statistics);
+      printStatistics(statistics, log_print_verbose_times_);
     else
       std::cerr << "Not enough data" << std::endl;
   }

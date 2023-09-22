@@ -17,7 +17,7 @@ class Subscriber
 //////////////////////////////////////
 public:
   // Constructor that gets a frequency in Hz
-  Subscriber(const std::string& topic_name, std::chrono::nanoseconds time_to_waste, bool busy_wait);
+  Subscriber(const std::string& topic_name, std::chrono::nanoseconds time_to_waste, bool busy_wait, bool quiet, bool log_print_verbose_times);
 
   // Destructor
   ~Subscriber();
@@ -45,4 +45,5 @@ private:
   SubscriberStatistics            statistics_;
   size_t                          statistics_size_;
 
+  const bool                      log_print_verbose_times_;
 };

@@ -18,7 +18,7 @@ class Publisher
 //////////////////////////////////////
 public:
   // Constructor that gets a frequency in Hz
-  Publisher(const std::string& topic_name, double frequency, std::size_t payload_size);
+  Publisher(const std::string& topic_name, double frequency, std::size_t payload_size, bool quiet, bool log_print_verbose_times);
 
   // Destructor
   ~Publisher();
@@ -50,4 +50,6 @@ private:
   mutable std::condition_variable       condition_variable_;
   std::atomic<bool>                     is_interrupted_;
   PublisherStatistics                   statistics_;
+
+  const bool                            log_print_verbose_times_;
 };
