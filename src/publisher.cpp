@@ -105,24 +105,24 @@ void Publisher::statisticsLoop()
 bool Publisher::preciseWaitUntil(std::chrono::steady_clock::time_point time) const
 {
   constexpr auto max_time_to_poll_wait = std::chrono::milliseconds(20);
-  constexpr auto max_time_to_busy_wait = std::chrono::microseconds(3);
+  constexpr auto max_time_to_busy_wait = std::chrono::microseconds(5);
 
   while(true)
   {
     auto remaining_time_to_wait = time - std::chrono::steady_clock::now();
+
+    auto time_to_poll_wait   = remaining_time_to_wait - max_time_to_busy_wait;
+    auto time_to_normal_wait = remaining_time_to_wait - max_time_to_poll_wait - max_time_to_busy_wait;
     
-    if (remaining_time_to_wait <= max_time_to_busy_wait)
+    if (time_to_normal_wait > std::chrono::steady_clock::duration::zero())
     {
-      while (std::chrono::steady_clock::now() < time)
-      {
-        // Busy wait
-      }
+      std::unique_lock<std::mutex> lock(mutex_);
+      condition_variable_.wait_for(lock, time_to_normal_wait, [this](){ return bool(is_interrupted_); });
+
       if (is_interrupted_)
         return false;
-      else
-        return true;
     }
-    else if (remaining_time_to_wait <= max_time_to_poll_wait)
+    else if (time_to_poll_wait > std::chrono::steady_clock::duration::zero())
     {
       while (std::chrono::steady_clock::now() < (time - max_time_to_busy_wait))
       {
@@ -137,12 +137,14 @@ bool Publisher::preciseWaitUntil(std::chrono::steady_clock::time_point time) con
     }
     else
     {
-      std::unique_lock<std::mutex> lock(mutex_);
-      condition_variable_.wait_for(lock, remaining_time_to_wait, [this](){ return bool(is_interrupted_); });
-
+      while ((std::chrono::steady_clock::now() < time) && !is_interrupted_)
+      {
+        // Busy wait
+      }
       if (is_interrupted_)
         return false;
+      else
+        return true;
     }
-
   }
 }
