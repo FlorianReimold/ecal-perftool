@@ -18,14 +18,14 @@
 void printUsage(const std::string& arg0)
 {
   std::cout << "Usage:" << std::endl;
-  std::cout << "  " << arg0 << " pub <topic_name> <frequency_hz> <payload_size_bytes>" << std::endl;
+  std::cout << "  " << arg0 << " pub <topic_name> <frequency_hz> <payload_size_bytes> [options]" << std::endl;
   std::cout << "or:" << std::endl;
-  std::cout << "  " << arg0 << " sub <topic_name> [callback_delay_ms]" << std::endl;
+  std::cout << "  " << arg0 << " sub <topic_name> [callback_delay_ms] [options]" << std::endl;
   std::cout << std::endl;
   std::cout << "Options:" << std::endl;
   std::cout << "  -q, --quiet:     Do not print any output" << std::endl;
   std::cout << "  -v, --verbose:   Print all measured times for all messages" << std::endl;
-  std::cout << "      --busy-wait: Busy wait when receiving messages (i.e. burn CPU)" << std::endl;
+  std::cout << "      --busy-wait: Busy wait when receiving messages (i.e. burn CPU). For subscribers only." << std::endl;
 
 }
 
