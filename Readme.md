@@ -48,4 +48,4 @@ Options:
 - `cnt`: Amount of received sent since last log output
 - `lost`: Amount of dropped messages since the last log output. Determined by comparing the native eCAL message counter of each message to the previous.
 - `msg_dt`: Duration between the received messages, consisting of  `mean [min, max]` in milliseconds
-- `msg_freq`: Computed message-frequency in Hz
+- `msg_freq`: Computed message frequency in Hz
