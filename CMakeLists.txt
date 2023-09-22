@@ -15,7 +15,8 @@ set(source_files
   src/subscriber_statistics.h
 )
 
-add_executable(${PROJECT_NAME} ${source_files})
+#add_executable(${PROJECT_NAME} ${source_files})
+ecal_add_sample(${PROJECT_NAME} ${source_files})
 
 target_link_libraries(${PROJECT_NAME}
   eCAL::core
