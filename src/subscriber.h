@@ -20,7 +20,14 @@ class Subscriber
 //////////////////////////////////////
 public:
   // Constructor that gets a frequency in Hz
-  Subscriber(const std::string& topic_name, std::chrono::nanoseconds time_to_waste, bool busy_wait, bool quiet, bool log_print_verbose_times);
+  Subscriber(const std::string&                   topic_name
+            , std::chrono::nanoseconds            time_to_waste
+            , bool                                busy_wait
+            , bool                                hickup
+            , std::chrono::steady_clock::duration wait_before_hickup
+            , std::chrono::steady_clock::duration hickup_delay
+            , bool                                quiet
+            , bool                                log_print_verbose_times);
 
   // Destructor
   ~Subscriber();
@@ -40,6 +47,11 @@ private:
   eCAL::CSubscriber            ecal_sub;
   std::chrono::nanoseconds     time_to_waste_;
   bool                         busy_wait_;
+
+  bool                                        hickup_;
+  const std::chrono::steady_clock::duration   wait_before_hickup_;
+  std::chrono::steady_clock::time_point       hickup_time_;
+  const std::chrono::steady_clock::duration   hickup_delay_;
 
   std::unique_ptr<std::thread>    statistics_thread_;
   mutable std::mutex              mutex_;

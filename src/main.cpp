@@ -29,6 +29,7 @@ void printUsage(const std::string& arg0)
   std::cout << "  -q, --quiet:     Do not print any output" << std::endl;
   std::cout << "  -v, --verbose:   Print all measured times for all messages" << std::endl;
   std::cout << "      --busy-wait: Busy wait when receiving messages (i.e. burn CPU). For subscribers only." << std::endl;
+  std::cout << "      --hickup <after_ms> <delay_ms>: Further delay a single callback. For subscribers only." << std::endl;
 
 }
 
@@ -41,6 +42,10 @@ int main(int argc, char** argv)
   bool quiet_arg           = false;
   bool verbose_print_times = false;
   bool busy_wait_arg       = false;
+
+  bool hickup_arg          = false;
+  std::chrono::steady_clock::duration hickup_time (0);
+  std::chrono::steady_clock::duration hickup_delay(0);
 
   // convert argc, argv to vector of strings
   std::vector<std::string> args;
@@ -57,6 +62,44 @@ int main(int argc, char** argv)
   {
     printUsage(args[0]);
     return 0;
+  }
+
+  // find "--hickup" argument and remove it from args
+  {
+    auto hickup_arg_it = std::find(args.begin(), args.end(), "--hickup");
+    if (hickup_arg_it != args.end())
+    {
+      hickup_arg = true;
+
+      // Check if there are enough arguments for the time and delay after the hickup_arg_it and parse those as doubles
+      if (args.size() < static_cast<size_t>(std::distance(args.begin(), hickup_arg_it) + 3))
+      {
+        std::cerr << "Invalid number of parameters after --hickup" << std::endl;
+        printUsage(args[0]);
+        return 1;
+      }
+      else
+      {
+        try
+        {
+          // Parse the next two arguments as double 
+          double hickup_time_ms  = std::stod(*(std::next(hickup_arg_it, 1)));
+          double hickup_delay_ms = std::stod(*(std::next(hickup_arg_it, 2)));
+
+          hickup_time  = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double, std::milli>(hickup_time_ms));
+          hickup_delay = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double, std::milli>(hickup_delay_ms));
+        }
+        catch (const std::exception& e)
+        {
+          std::cerr << "Failed parsing parameters after --hickup: " << e.what() << std::endl;
+          printUsage(args[0]);
+          return 1;
+        }
+
+        // Remove all 3 parameters
+        args.erase(hickup_arg_it, std::next(hickup_arg_it, 3));
+      }
+    }
   }
 
   // find "--quiet" argument and remove it from args
@@ -161,7 +204,7 @@ int main(int argc, char** argv)
     eCAL::Initialize(argc, argv, "ecal-perftool");
     eCAL::Util::EnableLoopback(true);
     
-    Subscriber subscriber(topic_name, callback_delay, busy_wait_arg, quiet_arg, verbose_print_times);
+    Subscriber subscriber(topic_name, callback_delay, busy_wait_arg, hickup_arg, hickup_time, hickup_delay, quiet_arg, verbose_print_times);
 
     // Just don't exit
     while (eCAL::Ok())

@@ -6,10 +6,21 @@
 #include <iostream>
 #include <thread>
 
-Subscriber::Subscriber(const std::string& topic_name, std::chrono::nanoseconds time_to_waste, bool busy_wait, bool quiet, bool log_print_verbose_times)
+Subscriber::Subscriber(const std::string&                   topic_name
+                      , std::chrono::nanoseconds            time_to_waste
+                      , bool                                busy_wait
+                      , bool                                hickup
+                      , std::chrono::steady_clock::duration wait_before_hickup
+                      , std::chrono::steady_clock::duration hickup_delay
+                      , bool                                quiet
+                      , bool                                log_print_verbose_times)
   : ecal_sub                (topic_name)
   , time_to_waste_          (time_to_waste)
   , busy_wait_              (busy_wait)
+  , hickup_                 (hickup)
+  , wait_before_hickup_     (wait_before_hickup)
+  , hickup_time_            (std::chrono::steady_clock::time_point::max())
+  , hickup_delay_           (hickup_delay)
   , is_interrupted_         (false)
   , statistics_size_        (100)
   , log_print_verbose_times_(log_print_verbose_times)
@@ -40,6 +51,10 @@ Subscriber::~Subscriber()
 
 void Subscriber::callback(const char* topic_name_, const eCAL::SReceiveCallbackData* data_)
 {
+  // Initialize callback timepoint, if necessary
+  if (hickup_ && hickup_time_ == std::chrono::steady_clock::time_point::max())
+      hickup_time_ = std::chrono::steady_clock::now() + wait_before_hickup_;
+
   SubscribedMessage message_info;
   message_info.local_receive_time = std::chrono::steady_clock::now();
   message_info.ecal_receive_time  = eCAL::Time::ecal_clock::now();
@@ -47,19 +62,31 @@ void Subscriber::callback(const char* topic_name_, const eCAL::SReceiveCallbackD
   message_info.ecal_counter       = data_->clock;
   message_info.size_bytes         = data_->size;
 
-  if (time_to_waste_ >= std::chrono::nanoseconds::zero())
+  std::chrono::steady_clock::duration time_to_waste_this_iteration(time_to_waste_);
+
+  // Check if we need to hickup
+  if (hickup_ && std::chrono::steady_clock::now() >= hickup_time_)
+  {
+    // Reset hickup (we only want to do that once)
+    hickup_ = false;
+
+    // use another sleep time for this iteratoin
+    time_to_waste_this_iteration = hickup_delay_;
+  }
+
+  if (time_to_waste_this_iteration >= std::chrono::nanoseconds::zero())
   {
     if (busy_wait_)
     {
       auto start = std::chrono::high_resolution_clock::now();
-      while (std::chrono::high_resolution_clock::now() - start < time_to_waste_)
+      while (std::chrono::high_resolution_clock::now() - start < time_to_waste_this_iteration)
       {
         // Do nothing
       }
     }
     else
     {
-      std::this_thread::sleep_for(time_to_waste_);
+      std::this_thread::sleep_for(time_to_waste_this_iteration);
     }
   }
 
