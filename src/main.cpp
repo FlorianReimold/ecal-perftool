@@ -29,6 +29,7 @@ void printUsage(const std::string& arg0)
   std::cout << "  -q, --quiet:     Do not print any output" << std::endl;
   std::cout << "  -v, --verbose:   Print all measured times for all messages" << std::endl;
   std::cout << "      --busy-wait: Busy wait when receiving messages (i.e. burn CPU). For subscribers only." << std::endl;
+  std::cout << "      --hickup <after_ms> <delay_ms>: Further delay a single callback. For subscribers only." << std::endl;
 
 }
 
@@ -41,6 +42,10 @@ int main(int argc, char** argv)
   bool quiet_arg           = false;
   bool verbose_print_times = false;
   bool busy_wait_arg       = false;
+
+  bool hickup_arg          = false;
+  double hickup_time_ms (0);
+  double hickup_delay_ms(0);
 
   // convert argc, argv to vector of strings
   std::vector<std::string> args;
@@ -57,6 +62,18 @@ int main(int argc, char** argv)
   {
     printUsage(args[0]);
     return 0;
+  }
+
+  // find "--hickup" argument and remove it from args
+  {
+    auto hickup_arg_it = std::find(args.begin(), args.end(), "--hickup");
+    if (hickup_arg_it != args.end())
+    {
+      hickup_arg_it = true;
+
+      auto hickup_arg_time_it = std::next(hickup_arg_it, 1);
+
+    }
   }
 
   // find "--quiet" argument and remove it from args
