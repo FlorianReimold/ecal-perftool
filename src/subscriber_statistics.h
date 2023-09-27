@@ -29,7 +29,7 @@ inline void printStatistics(const SubscriberStatistics& statistics, bool print_v
   auto entire_duration         = statistics.back().local_receive_time - statistics.front().local_receive_time;
 
   // The first message is from the previous loop run and only exists to count lost messages properly and to compute the delay of the actual first message.
-  int received_msgs        = statistics.size() - 1;
+  int received_msgs        = static_cast<int>(statistics.size()) - 1;
 
   // Check if the ecal_counter is continous. If not, we have lost messages. Count them.
   bool ecal_counter_is_monotinc = true;
