@@ -44,8 +44,8 @@ int main(int argc, char** argv)
   bool busy_wait_arg       = false;
 
   bool hickup_arg          = false;
-  double hickup_time_ms (0);
-  double hickup_delay_ms(0);
+  std::chrono::steady_clock::duration hickup_time (0);
+  std::chrono::steady_clock::duration hickup_delay(0);
 
   // convert argc, argv to vector of strings
   std::vector<std::string> args;
@@ -69,10 +69,36 @@ int main(int argc, char** argv)
     auto hickup_arg_it = std::find(args.begin(), args.end(), "--hickup");
     if (hickup_arg_it != args.end())
     {
-      hickup_arg_it = true;
+      hickup_arg = true;
 
-      auto hickup_arg_time_it = std::next(hickup_arg_it, 1);
+      // Check if there are enough arguments for the time and delay after the hickup_arg_it and parse those as doubles
+      if (args.size() < static_cast<size_t>(std::distance(args.begin(), hickup_arg_it) + 3))
+      {
+        std::cerr << "Invalid number of parameters after --hickup" << std::endl;
+        printUsage(args[0]);
+        return 1;
+      }
+      else
+      {
+        try
+        {
+          // Parse the next two arguments as double 
+          double hickup_time_ms  = std::stod(*(std::next(hickup_arg_it, 1)));
+          double hickup_delay_ms = std::stod(*(std::next(hickup_arg_it, 2)));
 
+          hickup_time  = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double, std::milli>(hickup_time_ms));
+          hickup_delay = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double, std::milli>(hickup_delay_ms));
+        }
+        catch (const std::exception& e)
+        {
+          std::cerr << "Failed parsing parameters after --hickup: " << e.what() << std::endl;
+          printUsage(args[0]);
+          return 1;
+        }
+
+        // Remove all 3 parameters
+        args.erase(hickup_arg_it, std::next(hickup_arg_it, 3));
+      }
     }
   }
 
@@ -178,7 +204,7 @@ int main(int argc, char** argv)
     eCAL::Initialize(argc, argv, "ecal-perftool");
     eCAL::Util::EnableLoopback(true);
     
-    Subscriber subscriber(topic_name, callback_delay, busy_wait_arg, quiet_arg, verbose_print_times);
+    Subscriber subscriber(topic_name, callback_delay, busy_wait_arg, hickup_arg, hickup_time, hickup_delay, quiet_arg, verbose_print_times);
 
     // Just don't exit
     while (eCAL::Ok())
