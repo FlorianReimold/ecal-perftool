@@ -14,6 +14,7 @@ Options:
   -q, --quiet:     Do not print any output
   -v, --verbose:   Print all measured times for all messages
       --busy-wait: Busy wait when receiving messages (i.e. burn CPU). For subscribers only.
+      --hickup <after_ms> <delay_ms>: Further delay a single callback. For subscribers only.
 ```
 
 ## Output
