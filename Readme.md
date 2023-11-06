@@ -6,9 +6,9 @@ The ecal-perftool is a simple application to estimate the performance of eCAL pu
 
 ```
 Usage:
-  ecal_perftool pub <topic_name> <frequency_hz> <payload_size_bytes> [options]
+  ecal_sample_perftool pub <topic_name> <frequency_hz> <payload_size_bytes> [options]
 or:
-  ecal_perftool sub <topic_name> [callback_delay_ms] [options]
+  ecal_sample_perftool sub <topic_name> [callback_delay_ms] [options]
 
 Options:
   -q, --quiet:     Do not print any output

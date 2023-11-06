@@ -1,5 +1,21 @@
-﻿// Copyright (c) Continental. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for details.
+﻿/* ========================= eCAL LICENSE =================================
+ *
+ * Copyright (C) 2023 Continental Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ========================= eCAL LICENSE =================================
+*/
 
 #pragma once
 
@@ -58,11 +74,6 @@ inline void printStatistics(const SubscriberStatistics& statistics, bool print_v
   auto msg_dt_mean             = entire_duration / (statistics.size() - 1);
 
   auto msg_frequency           = 1.0 / std::chrono::duration_cast<std::chrono::duration<double>>(msg_dt_mean).count();
-
-  // Compute mean delay time based on ecal send and receive time
-  //auto delay_mean              = std::accumulate(statistics.begin(), statistics.end(), std::chrono::steady_clock::duration(0), [](auto sum, auto& msg){ return sum + (msg.ecal_receive_time - msg.ecal_send_time); }) / statistics.size();
-
-
   
   // Print mean entire_duration and rmse in a single line in milliseconds
   {
