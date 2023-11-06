@@ -21,6 +21,7 @@
 
 #include <iostream>
 #include <thread>
+#include <algorithm>
 
 Subscriber::Subscriber(const std::string&                   topic_name
                       , std::chrono::nanoseconds            time_to_waste
