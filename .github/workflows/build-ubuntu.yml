@@ -66,10 +66,10 @@ jobs:
     - name: Install
       run: | 
         cmake --build . --config Release --target install
-      working-directory: ${{ runner.workspace }}\_build
+      working-directory: ${{ runner.workspace }}/_build
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
       with:
         name: ${{ env.PROJECT_NAME }}-${{ env.os_name }}-${{ env.cpu_architecture }}-ecal-${{ env.ECAL_VERSION }}
-        path: ${{ runner.workspace }}\${{ env.INSTALL_PREFIX }}\bin\*
+        path: ${{ runner.workspace }}/${{ env.INSTALL_PREFIX }}/bin/*
