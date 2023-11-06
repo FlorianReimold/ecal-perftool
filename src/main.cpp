@@ -1,14 +1,37 @@
-// Copyright (c) Continental. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for details.
+/* ========================= eCAL LICENSE =================================
+ *
+ * Copyright (C) 2023 Continental Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ========================= eCAL LICENSE =================================
+*/
 
-#include <ecal/ecal.h>
+#include <algorithm>
+#include <chrono>
+#include <cstddef>
+#include <ecal/ecal.h> // IWYU pragma: keep
 
 #include "publisher.h"
 #include "subscriber.h"
 
+#include <exception>
 #include <iostream>
+#include <iterator>
+#include <ratio>
+#include <string>
 #include <thread>
-
+#include <vector>
 
 #ifdef WIN32
 
@@ -83,8 +106,8 @@ int main(int argc, char** argv)
         try
         {
           // Parse the next two arguments as double 
-          double hickup_time_ms  = std::stod(*(std::next(hickup_arg_it, 1)));
-          double hickup_delay_ms = std::stod(*(std::next(hickup_arg_it, 2)));
+          const double hickup_time_ms  = std::stod(*(std::next(hickup_arg_it, 1)));
+          const double hickup_delay_ms = std::stod(*(std::next(hickup_arg_it, 2)));
 
           hickup_time  = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double, std::milli>(hickup_time_ms));
           hickup_delay = std::chrono::duration_cast<std::chrono::steady_clock::duration>(std::chrono::duration<double, std::milli>(hickup_delay_ms));
@@ -168,15 +191,15 @@ int main(int argc, char** argv)
       printUsage(args[0]);
       return 1;
     }
-    std::string        topic_name         = args[2];
-    double             frequency_hz       = std::stod(args[3]);
-    unsigned long long payload_size_bytes = std::stoull(args[4]);
+    const std::string        topic_name         = args[2];
+    const double             frequency_hz       = std::stod(args[3]);
+    const unsigned long long payload_size_bytes = std::stoull(args[4]);
 
     // Initialize eCAL
     eCAL::Initialize(argc, argv, "ecal-perftool");
     eCAL::Util::EnableLoopback(true);
     
-    Publisher publisher(topic_name, frequency_hz, payload_size_bytes, quiet_arg, verbose_print_times);
+    const Publisher publisher(topic_name, frequency_hz, payload_size_bytes, quiet_arg, verbose_print_times);
     
     // Just don't exit
     while (eCAL::Ok())
@@ -196,15 +219,15 @@ int main(int argc, char** argv)
       return 1;
     }
 
-    std::string               topic_name = args[2];
-    std::chrono::milliseconds callback_delay((args.size() >= 4 ? std::stoull(args[3]) : 0));
+    const std::string               topic_name = args[2];
+    const std::chrono::milliseconds callback_delay((args.size() >= 4 ? std::stoull(args[3]) : 0));
 
     
     // Initialize eCAL
     eCAL::Initialize(argc, argv, "ecal-perftool");
     eCAL::Util::EnableLoopback(true);
     
-    Subscriber subscriber(topic_name, callback_delay, busy_wait_arg, hickup_arg, hickup_time, hickup_delay, quiet_arg, verbose_print_times);
+    const Subscriber subscriber(topic_name, callback_delay, busy_wait_arg, hickup_arg, hickup_time, hickup_delay, quiet_arg, verbose_print_times);
 
     // Just don't exit
     while (eCAL::Ok())

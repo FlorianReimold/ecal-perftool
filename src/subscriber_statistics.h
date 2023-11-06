@@ -1,14 +1,32 @@
-﻿// Copyright (c) Continental. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for details.
+﻿/* ========================= eCAL LICENSE =================================
+ *
+ * Copyright (C) 2023 Continental Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ========================= eCAL LICENSE =================================
+*/
 
 #pragma once
 
-#include <vector>
 #include <chrono>
-#include <iostream>
-#include <numeric>
-#include <sstream>
+#include <cstddef>
 #include <iomanip>
+#include <iostream>
+#include <ratio>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include <ecal/ecal_time.h>
 
@@ -17,8 +35,8 @@ struct SubscribedMessage
   std::chrono::steady_clock::time_point local_receive_time;
   eCAL::Time::ecal_clock::time_point    ecal_send_time;
   eCAL::Time::ecal_clock::time_point    ecal_receive_time;
-  unsigned long long                    size_bytes;
-  unsigned long long                    ecal_counter;
+  unsigned long long                    size_bytes{};
+  unsigned long long                    ecal_counter{};
 };
 
 using SubscriberStatistics = std::vector<SubscribedMessage>;
@@ -26,10 +44,10 @@ using SubscriberStatistics = std::vector<SubscribedMessage>;
 inline void printStatistics(const SubscriberStatistics& statistics, bool print_verbose_times)
 {
   // Compute entire entire_duration from first to last message and the mean
-  auto entire_duration         = statistics.back().local_receive_time - statistics.front().local_receive_time;
+  const auto entire_duration         = statistics.back().local_receive_time - statistics.front().local_receive_time;
 
   // The first message is from the previous loop run and only exists to count lost messages properly and to compute the delay of the actual first message.
-  int received_msgs        = static_cast<int>(statistics.size()) - 1;
+  const int received_msgs        = static_cast<int>(statistics.size()) - 1;
 
   // Check if the ecal_counter is continous. If not, we have lost messages. Count them.
   bool ecal_counter_is_monotinc = true;
@@ -58,11 +76,6 @@ inline void printStatistics(const SubscriberStatistics& statistics, bool print_v
   auto msg_dt_mean             = entire_duration / (statistics.size() - 1);
 
   auto msg_frequency           = 1.0 / std::chrono::duration_cast<std::chrono::duration<double>>(msg_dt_mean).count();
-
-  // Compute mean delay time based on ecal send and receive time
-  //auto delay_mean              = std::accumulate(statistics.begin(), statistics.end(), std::chrono::steady_clock::duration(0), [](auto sum, auto& msg){ return sum + (msg.ecal_receive_time - msg.ecal_send_time); }) / statistics.size();
-
-
   
   // Print mean entire_duration and rmse in a single line in milliseconds
   {

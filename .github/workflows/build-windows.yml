@@ -9,7 +9,7 @@ on:
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   INSTALL_PREFIX: _install
-  PROJECT_NAME:   ecal_perftool
+  PROJECT_NAME:   ecal_sample_perftool
 
 jobs:
   build-windows:

@@ -1,14 +1,32 @@
-// Copyright (c) Continental. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for details.
+/* ========================= eCAL LICENSE =================================
+ *
+ * Copyright (C) 2023 Continental Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ========================= eCAL LICENSE =================================
+*/
+
 
 #pragma once
 
-#include <vector>
 #include <chrono>
-#include <iostream>
-#include <numeric>
-#include <sstream>
+#include <cstddef>
 #include <iomanip>
+#include <iostream>
+#include <ratio>
+#include <sstream>
+#include <vector>
 
 struct PublishedMessage
 {
@@ -35,8 +53,13 @@ inline void printStatistics(const PublisherStatistics& statistics, bool print_ve
       send_call_duration_max = send_call_duration;
   }
 
-  // Compute the mean send_call_duration. Skip the first element, as that one actually is from teh last iteration.
-  auto send_call_duration_mean = std::accumulate(statistics.begin() + 1, statistics.end(), std::chrono::steady_clock::duration(0), [](auto sum, auto& msg){ return sum + msg.send_call_duration; }) / (statistics.size() - 1);
+  // Compute the mean send_call_duration. Skip the first element, as that one actually is from the last iteration.
+  auto send_call_duration_mean = std::chrono::steady_clock::duration(0);
+  for (size_t i = 1; i < statistics.size(); ++i)
+  {
+    send_call_duration_mean += statistics[i].send_call_duration;
+  }
+  send_call_duration_mean /= (statistics.size() - 1);
 
   // Get the minimum and maximum loop time (based on the publish_time timestamp)
   auto loop_time_min = std::chrono::steady_clock::duration::max();

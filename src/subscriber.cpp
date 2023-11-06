@@ -1,10 +1,33 @@
-// Copyright (c) Continental. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for details.
+/* ========================= eCAL LICENSE =================================
+ *
+ * Copyright (C) 2023 Continental Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * ========================= eCAL LICENSE =================================
+*/
 
 #include "subscriber.h"
 
+#include <algorithm>
+#include <chrono>
 #include <iostream>
+#include <memory>
+#include <mutex>
+#include <string>
 #include <thread>
+
+#include "subscriber_statistics.h"
 
 Subscriber::Subscriber(const std::string&                   topic_name
                       , std::chrono::nanoseconds            time_to_waste
@@ -39,7 +62,7 @@ Subscriber::~Subscriber()
 {
   // Interrupt the thread
   {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     is_interrupted_ = true;
     condition_variable_.notify_all();
   }
@@ -49,7 +72,7 @@ Subscriber::~Subscriber()
     statistics_thread_->join();
 }
 
-void Subscriber::callback(const char* topic_name_, const eCAL::SReceiveCallbackData* data_)
+void Subscriber::callback(const char* /*topic_name_*/, const eCAL::SReceiveCallbackData* data_)
 {
   // Initialize callback timepoint, if necessary
   if (hickup_ && hickup_time_ == std::chrono::steady_clock::time_point::max())
@@ -92,7 +115,7 @@ void Subscriber::callback(const char* topic_name_, const eCAL::SReceiveCallbackD
 
   if (statistics_thread_)
   {
-    std::unique_lock<std::mutex>lock(mutex_);
+    const std::unique_lock<std::mutex>lock(mutex_);
     statistics_.push_back(message_info);
   }
 }
