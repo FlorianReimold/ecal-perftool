@@ -19,12 +19,14 @@
 
 #pragma once
 
-#include <vector>
 #include <chrono>
-#include <iostream>
-#include <numeric>
-#include <sstream>
+#include <cstddef>
 #include <iomanip>
+#include <iostream>
+#include <ratio>
+#include <sstream>
+#include <string>
+#include <vector>
 
 #include <ecal/ecal_time.h>
 
@@ -33,8 +35,8 @@ struct SubscribedMessage
   std::chrono::steady_clock::time_point local_receive_time;
   eCAL::Time::ecal_clock::time_point    ecal_send_time;
   eCAL::Time::ecal_clock::time_point    ecal_receive_time;
-  unsigned long long                    size_bytes;
-  unsigned long long                    ecal_counter;
+  unsigned long long                    size_bytes{};
+  unsigned long long                    ecal_counter{};
 };
 
 using SubscriberStatistics = std::vector<SubscribedMessage>;
@@ -42,10 +44,10 @@ using SubscriberStatistics = std::vector<SubscribedMessage>;
 inline void printStatistics(const SubscriberStatistics& statistics, bool print_verbose_times)
 {
   // Compute entire entire_duration from first to last message and the mean
-  auto entire_duration         = statistics.back().local_receive_time - statistics.front().local_receive_time;
+  const auto entire_duration         = statistics.back().local_receive_time - statistics.front().local_receive_time;
 
   // The first message is from the previous loop run and only exists to count lost messages properly and to compute the delay of the actual first message.
-  int received_msgs        = static_cast<int>(statistics.size()) - 1;
+  const int received_msgs        = static_cast<int>(statistics.size()) - 1;
 
   // Check if the ecal_counter is continous. If not, we have lost messages. Count them.
   bool ecal_counter_is_monotinc = true;

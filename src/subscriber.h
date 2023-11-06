@@ -20,10 +20,12 @@
 
 #pragma once
 
-#include <ecal/ecal_subscriber.h>
 #include <chrono>
+#include <cstddef>
+#include <ecal/ecal_subscriber.h>
 
 #include <memory>
+#include <string>
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -45,6 +47,14 @@ public:
             , std::chrono::steady_clock::duration hickup_delay
             , bool                                quiet
             , bool                                log_print_verbose_times);
+
+    // Delete copy
+    Subscriber(const Subscriber&)                = delete;
+    Subscriber& operator=(const Subscriber&)     = delete;
+
+    // Delete move (the class uses a this reference)
+    Subscriber(Subscriber&&) noexcept            = delete;
+    Subscriber& operator=(Subscriber&&) noexcept = delete;
 
   // Destructor
   ~Subscriber();

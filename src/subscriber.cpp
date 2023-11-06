@@ -19,9 +19,15 @@
 
 #include "subscriber.h"
 
-#include <iostream>
-#include <thread>
 #include <algorithm>
+#include <chrono>
+#include <iostream>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <thread>
+
+#include "subscriber_statistics.h"
 
 Subscriber::Subscriber(const std::string&                   topic_name
                       , std::chrono::nanoseconds            time_to_waste
@@ -56,7 +62,7 @@ Subscriber::~Subscriber()
 {
   // Interrupt the thread
   {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     is_interrupted_ = true;
     condition_variable_.notify_all();
   }
@@ -66,7 +72,7 @@ Subscriber::~Subscriber()
     statistics_thread_->join();
 }
 
-void Subscriber::callback(const char* topic_name_, const eCAL::SReceiveCallbackData* data_)
+void Subscriber::callback(const char* /*topic_name_*/, const eCAL::SReceiveCallbackData* data_)
 {
   // Initialize callback timepoint, if necessary
   if (hickup_ && hickup_time_ == std::chrono::steady_clock::time_point::max())
@@ -109,7 +115,7 @@ void Subscriber::callback(const char* topic_name_, const eCAL::SReceiveCallbackD
 
   if (statistics_thread_)
   {
-    std::unique_lock<std::mutex>lock(mutex_);
+    const std::unique_lock<std::mutex>lock(mutex_);
     statistics_.push_back(message_info);
   }
 }

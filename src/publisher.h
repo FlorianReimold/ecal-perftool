@@ -20,14 +20,16 @@
 
 #pragma once
 
+#include <atomic>
+#include <chrono>
+#include <condition_variable>
+#include <cstddef>
 #include <ecal/ecal_publisher.h>
-#include <thread>
 #include <memory>
 #include <mutex>
-#include <vector>
 #include <string>
-#include <atomic>
-#include <condition_variable>
+#include <thread>
+#include <vector>
 
 #include "publisher_statistics.h"
 
@@ -39,6 +41,14 @@ class Publisher
 public:
   // Constructor that gets a frequency in Hz
   Publisher(const std::string& topic_name, double frequency, std::size_t payload_size, bool quiet, bool log_print_verbose_times);
+
+  // Delete copy
+  Publisher(const Publisher&)                = delete;
+  Publisher& operator=(const Publisher&)     = delete;
+
+  // Delete move (the class uses a this reference)
+  Publisher(Publisher&&) noexcept            = delete;
+  Publisher& operator=(Publisher&&) noexcept = delete;
 
   // Destructor
   ~Publisher();
