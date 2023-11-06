@@ -1,0 +1,75 @@
+name: Ubuntu
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  INSTALL_PREFIX: _install
+  PROJECT_NAME:   ecal_perftool
+  
+jobs:
+  build-ubuntu:
+
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-20.04]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+
+    - name: Set Variables
+      run: |
+        echo "cpu_architecture=$(uname -m)" >> "$GITHUB_ENV"
+        
+        source /etc/os-release
+        echo "os_name=ubuntu-$VERSION_ID" >> "$GITHUB_ENV"
+
+    - name: Install Dependencies
+      run: |
+          sudo add-apt-repository ppa:ecal/ecal-latest
+          sudo apt-get update
+          sudo apt-get install ecal libprotobuf-dev
+
+    - name: Extract eCAL Version Number
+      run: |
+        ECAL_VERSION=$(dpkg -s ecal | grep '^Version:' | sed 's@^[^0-9]*\([0-9.]\+\).*@\1@' | cut -d"." -f-2)
+        echo "ECAL_VERSION=${ECAL_VERSION}" >> "$GITHUB_ENV"
+        
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules:  'true'
+        fetch-depth: 0
+
+    - name: CMake
+      run: |
+        mkdir "${{ runner.workspace }}/_build"
+        cd "${{ runner.workspace }}/_build"
+        cmake -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_SYSCONFDIR=/etc \
+              -DCMAKE_INSTALL_PREFIX=${{ env.INSTALL_PREFIX }} \
+              -DCMAKE_INSTALL_LOCALSTATEDIR=/var \
+              -DCMAKE_INSTALL_LIBDIR=lib/${{ env.cpu_architecture }}-linux-gnu \
+              "${{ github.workspace }}"
+
+      shell: bash
+
+    - name: Build Release
+      run: cmake --build . --config Release
+      working-directory: ${{ runner.workspace }}/_build
+
+    - name: Install
+      run: | 
+        cmake --build . --config Release --target install
+      working-directory: ${{ runner.workspace }}/_build
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.PROJECT_NAME }}-${{ env.os_name }}-${{ env.cpu_architecture }}-ecal-${{ env.ECAL_VERSION }}
+        path: ${{ runner.workspace }}/_build/${{ env.INSTALL_PREFIX }}/bin/${{ env.PROJECT_NAME }}

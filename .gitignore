@@ -33,6 +33,8 @@
 
 # Build dir
 /_build
+/build
 
 # IDE files
 CMakeLists.txt.user
+.vscode

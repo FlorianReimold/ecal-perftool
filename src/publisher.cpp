@@ -4,14 +4,22 @@
 #include "publisher.h"
 
 #include <iostream>
+#include <chrono>
+#include <thread>
+#include <mutex>
+#include <string>
+#include <memory>
+#include <cstdlib>
 
-#include <ecal/ecal.h>
+#include <ecal/ecal.h> // IWYU pragma: keep
+
+#include "publisher_statistics.h"
 
 #ifdef WIN32
   #define NOMINMAX
   #define WIN32_LEAN_AND_MEAN
-  #include <Windows.h>
-#else
+  #include <Windows.h> // IWYU pragma: keep
+#else 
   #include <unistd.h>
 #endif // WIN32
 
@@ -38,7 +46,7 @@ Publisher::~Publisher()
 {
   // Interrupt the thread
   {
-    std::unique_lock<std::mutex> lock(mutex_);
+    const std::unique_lock<std::mutex> lock(mutex_);
     is_interrupted_ = true;
     condition_variable_.notify_all();
   }
@@ -75,7 +83,7 @@ void Publisher::loop()
 
     if (statistics_thread_)
     {
-      std::lock_guard<std::mutex>lock (mutex_);
+      const std::lock_guard<std::mutex>lock (mutex_);
       statistics_.push_back(message_info);
     }
   }
@@ -135,7 +143,7 @@ bool Publisher::preciseWaitUntil(std::chrono::steady_clock::time_point time) con
       while (std::chrono::steady_clock::now() < (time - max_time_to_busy_wait))
       {
 #ifdef WIN32
-        Sleep(0);
+        Sleep(0); // NOLINT(misc-include-cleaner)
 #else
         usleep(1);
 #endif
@@ -149,10 +157,7 @@ bool Publisher::preciseWaitUntil(std::chrono::steady_clock::time_point time) con
       {
         // Busy wait
       }
-      if (is_interrupted_)
-        return false;
-      else
-        return true;
+      return !is_interrupted_;
     }
   }
 }

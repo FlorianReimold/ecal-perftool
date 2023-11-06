@@ -1,0 +1,67 @@
+name: Windows
+
+on:
+  push:
+  pull_request:
+    branches:
+      - main
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  INSTALL_PREFIX: _install
+  PROJECT_NAME:   ecal_perftool
+
+jobs:
+  build-windows:
+  
+    runs-on: windows-2022
+
+    steps:
+    - name: Download eCAL
+      uses: robinraju/release-downloader@v1.6
+      with:
+        repository: "eclipse-ecal/ecal"
+        latest: true
+        fileName: "ecal_*-win64.exe"
+        
+    - name: Extract eCAL Version
+      run: |
+        echo "ECAL_VERSION=$(ls | sed 's@^[^0-9]*\([0-9.]\+\).*@\1@' | cut -d"." -f-2)" >> "$GITHUB_ENV"
+      shell: bash
+
+    - name: Install eCAL
+      run: Start-Process -Wait -FilePath ".\ecal_*-win64.exe" -ArgumentList "/SILENT /ALLUSERS /SUPPRESSMSGBOXES /NORESTART /TYPE=full"
+
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        submodules:  'true'
+        fetch-depth: 0
+
+    - name: CMake
+      run: |
+        mkdir "${{ runner.workspace }}\_build"
+        cd "${{ runner.workspace }}\_build"
+        cmake -Ax64 ^
+              -DCMAKE_BUILD_TYPE=Release ^
+              -DCMAKE_FIND_PACKAGE_PREFER_CONFIG=ON ^
+              -DCMAKE_PREFIX_PATH="C:/eCAL/lib/cmake/;C:/eCAL/cmake" ^
+              -DCMAKE_MODULE_PATH="C:/eCAL/cmake" ^
+              -DCMAKE_INSTALL_PREFIX="${{ runner.workspace }}\${{ env.INSTALL_PREFIX }}" ^
+              %GITHUB_WORKSPACE%
+      shell: cmd
+      
+    - name: Build
+      run: cmake --build . --config Release
+      working-directory: ${{ runner.workspace }}\_build
+      
+    - name: Install
+      run: | 
+        cmake --build . --config Release --target install
+      working-directory: ${{ runner.workspace }}\_build
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ env.PROJECT_NAME }}-windows-ecal-${{env.ECAL_VERSION}}
+        path: ${{ runner.workspace }}\${{ env.INSTALL_PREFIX }}\bin\*.exe
