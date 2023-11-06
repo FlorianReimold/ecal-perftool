@@ -69,7 +69,6 @@ void Publisher::loop()
     {
       next_deadline_ = std::chrono::steady_clock::now() + period_;
     }
-    auto timepoint_wait_end = std::chrono::steady_clock::now();
 
     message_info.publish_time       = timepoint_snd_start;
     message_info.send_call_duration = timepoint_snd_end - timepoint_snd_start;
