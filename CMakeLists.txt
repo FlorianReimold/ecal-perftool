@@ -30,3 +30,5 @@ source_group(TREE "${CMAKE_CURRENT_LIST_DIR}"
     FILES
         ${source_files}
 )
+
+ecal_install_app(${PROJECT_NAME})
